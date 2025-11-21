@@ -119,76 +119,32 @@
 </div>
 
 <script>
-    // Get text from ?data= in URL
-    var params = new URLSearchParams(window.location.search);
-    var text = params.get("data") || "No content received.";
-    var textBox = document.getElementById("textBox");
-    var copiedMsg = document.getElementById("copiedMsg");
-    var copyBtn = document.getElementById("copyBtn");
+    // Get ?data= value and decode properly
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("data") || "";
+    const text = decodeURIComponent(raw);
 
+    const textBox = document.getElementById("textBox");
+    const copiedMsg = document.getElementById("copiedMsg");
+    const copyBtn = document.getElementById("copyBtn");
+
+    // Write the decoded text with exact line breaks
     textBox.textContent = text;
 
-    function showMessage(msg, isError) {
-        copiedMsg.textContent = msg;
-        copiedMsg.classList.add("show");
-        if (isError) {
-            copiedMsg.classList.add("error");
-        } else {
-            copiedMsg.classList.remove("error");
-        }
+    function copyText() {
+        navigator.clipboard.writeText(text).then(() => {
+            copiedMsg.textContent = "✔ Copied!";
+            copiedMsg.classList.add("show");
+        }).catch(() => {
+            copiedMsg.textContent = "Could not auto-copy. You can still copy manually.";
+            copiedMsg.classList.add("show");
+        });
     }
 
-    async function copyUsingClipboardAPI() {
-        if (!navigator.clipboard || !window.isSecureContext) {
-            throw new Error("Clipboard API not available");
-        }
-        await navigator.clipboard.writeText(text);
-    }
+    copyBtn.addEventListener("click", copyText);
 
-    function copyUsingExecCommand() {
-        var range = document.createRange();
-        range.selectNodeContents(textBox);
-        var selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-
-        var successful = document.execCommand("copy");
-        selection.removeAllRanges();
-
-        if (!successful) {
-            throw new Error("execCommand copy failed");
-        }
-    }
-
-    async function copyText() {
-        try {
-            // Try modern API first
-            await copyUsingClipboardAPI();
-            showMessage("✔ Copied to clipboard!", false);
-        } catch (e1) {
-            try {
-                // Fallback for older / restricted browsers
-                copyUsingExecCommand();
-                showMessage("✔ Copied to clipboard!", false);
-            } catch (e2) {
-                console.error("Copy failed:", e2);
-                showMessage("Could not copy automatically. You can still select the text above manually.", true);
-            }
-        }
-    }
-
-    // Button click (reliable path)
-    copyBtn.addEventListener("click", function() {
-        copyText();
-    });
-
-    // Try auto-copy on load (may be blocked in some browsers)
-    window.addEventListener("load", function() {
-        // Small delay so DOM is fully ready
-        setTimeout(function() {
-            copyText();
-        }, 150);
-    });
+    // Try auto-copy
+    setTimeout(copyText, 150);
 </script>
 
 </body>
