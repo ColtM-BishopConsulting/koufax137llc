@@ -26,8 +26,6 @@
         box-shadow: 0 10px 25px rgba(15,23,42,0.12);
         border: 1px solid #e5e7eb;
         text-align: center;
-        position: relative;
-        z-index: 1;
     }
 
     h2 {
@@ -75,11 +73,6 @@
         box-shadow: 0 4px 10px rgba(37,99,235,0.25);
     }
 
-    .button:active {
-        transform: translateY(1px);
-        box-shadow: 0 2px 6px rgba(37,99,235,0.25);
-    }
-
     .message {
         margin-top: 14px;
         font-size: 14px;
@@ -89,21 +82,11 @@
         transition: opacity 0.3s;
     }
 
-    .message.error {
-        color: #b91c1c;
-    }
-
     .message.show {
         opacity: 1;
     }
 
-    .footer {
-        margin-top: 20px;
-        font-size: 13px;
-        color: #9ca3af;
-    }
-
-    /* Full-screen overlay for countdown */
+    /* Fullscreen overlay */
     .overlay {
         position: fixed;
         inset: 0;
@@ -155,69 +138,34 @@
     <button id="copyBtn" class="button">Copy Text Again</button>
 
     <div id="copiedMsg" class="message">✔ Copied to clipboard!</div>
-
-    <div class="footer" id="footerNote">You can now paste this into your post.</div>
 </div>
 
-<!-- Overlay -->
+<!-- Countdown Overlay -->
 <div id="overlay" class="overlay">
     <div class="overlay-content">
-        <div class="overlay-title">Copied to clipboard ✅</div>
-        <div class="overlay-text">You’re all set. This tab will close or redirect shortly.</div>
-        <div id="countdown" class="overlay-count">Closing in 3…</div>
+        <div class="overlay-title">Copied to clipboard!</div>
+        <div class="overlay-text">Redirecting shortly...</div>
+        <div id="countdown" class="overlay-count">3…</div>
     </div>
 </div>
 
 <script>
-    // 👇 Set where to redirect after countdown (optional)
-    // Leave as empty string "" if you don't want a redirect.
-    const redirectUrl = "https://www.facebook.com/"; 
+    // 👉 Set redirect destination after copying
+    const redirectUrl = "https://www.facebook.com/";
 
     var params = new URLSearchParams(window.location.search);
     var raw = params.get("data") || "";
 
-    // URLSearchParams already decodes %0A etc.
+    // Decode text and fix literal \n if present
     var text = raw.replace(/\\n/g, "\n");
 
     var textBox    = document.getElementById("textBox");
     var copiedMsg  = document.getElementById("copiedMsg");
     var copyBtn    = document.getElementById("copyBtn");
-    var footerNote = document.getElementById("footerNote");
     var overlay    = document.getElementById("overlay");
     var countdown  = document.getElementById("countdown");
 
     textBox.textContent = text;
-
-    function showMessage(msg, isError) {
-        copiedMsg.textContent = msg;
-        copiedMsg.classList.add("show");
-        if (isError) copiedMsg.classList.add("error");
-        else copiedMsg.classList.remove("error");
-    }
-
-    function startOverlayCountdown(seconds) {
-        var remaining = seconds;
-        overlay.style.display = "flex";
-        countdown.textContent = "Closing in " + remaining + "…";
-
-        var interval = setInterval(function() {
-            remaining--;
-            if (remaining > 0) {
-                countdown.textContent = "Closing in " + remaining + "…";
-            } else {
-                clearInterval(interval);
-                // Try to close tab
-                try { window.close(); } catch (e) { console.error(e); }
-                // If that fails, redirect (if configured)
-                if (redirectUrl) {
-                    window.location.href = redirectUrl;
-                } else {
-                    overlay.style.display = "none";
-                    footerNote.textContent = "If this tab did not close automatically, you can safely close it now.";
-                }
-            }
-        }, 1000);
-    }
 
     async function copyText() {
         try {
@@ -232,18 +180,39 @@
                 document.execCommand("copy");
                 sel.removeAllRanges();
             }
-            showMessage("✔ Copied to clipboard!", false);
-            startOverlayCountdown(3);
+
+            copiedMsg.classList.add("show");
+            startRedirectCountdown(3);
+
         } catch (e) {
             console.error(e);
-            showMessage("Could not copy automatically. You can still select the text above manually.", true);
+            copiedMsg.textContent = "Could not copy automatically.";
+            copiedMsg.classList.add("show");
         }
     }
 
+    function startRedirectCountdown(seconds) {
+        let remaining = seconds;
+
+        overlay.style.display = "flex";
+        countdown.textContent = remaining + "…";
+
+        const timer = setInterval(() => {
+            remaining--;
+            if (remaining > 0) {
+                countdown.textContent = remaining + "…";
+            } else {
+                clearInterval(timer);
+                window.location.href = redirectUrl;
+            }
+        }, 1000);
+    }
+
+    // Copy again (manual button)
     copyBtn.addEventListener("click", copyText);
 
-    // Try auto-copy on load
-    window.addEventListener("load", function () {
+    // Auto-copy on page load
+    window.addEventListener("load", () => {
         setTimeout(copyText, 150);
     });
 </script>
