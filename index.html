@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Copy Listing Text</title>
+
+<style>
+    body {
+        margin: 0;
+        background: #f3f4f6;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .card {
+        background: #ffffff;
+        width: 100%;
+        max-width: 600px;
+        padding: 32px;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(15,23,42,0.12);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+    }
+
+    h2 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #111827;
+        margin-top: 0;
+    }
+
+    p {
+        color: #4b5563;
+        font-size: 15px;
+    }
+
+    .text-box {
+        margin-top: 20px;
+        background: #ffffff;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        padding: 18px;
+        text-align: left;
+        white-space: pre-wrap;
+        font-size: 15px;
+        color: #1f2937;
+        user-select: text;
+        -webkit-user-select: text;
+        cursor: text;
+        min-height: 140px;
+    }
+
+    .message {
+        margin-top: 18px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #059669;
+        opacity: 0;
+        transition: opacity 0.4s;
+    }
+
+    .message.show {
+        opacity: 1;
+    }
+
+    .footer {
+        margin-top: 24px;
+        font-size: 13px;
+        color: #9ca3af;
+    }
+</style>
+
+</head>
+<body>
+
+<div class="card">
+    <h2>Listing Text Copied</h2>
+    <p>Your content has been automatically copied to your clipboard.</p>
+
+    <div id="textBox" class="text-box"></div>
+
+    <div id="copiedMsg" class="message">✔ Copied to clipboard!</div>
+
+    <div class="footer">You may now close this page.</div>
+</div>
+
+<script>
+    // 1. Read text from ?data= in URL
+    const params = new URLSearchParams(window.location.search);
+    const text = params.get("data") || "No content received.";
+
+    // 2. Render text into the box
+    document.getElementById("textBox").textContent = text;
+
+    // 3. Try copying to clipboard automatically
+    async function copyText() {
+        try {
+            await navigator.clipboard.writeText(text);
+            document.getElementById("copiedMsg").classList.add("show");
+        } catch (err) {
+            console.error("Auto-copy failed:", err);
+        }
+    }
+
+    copyText();
+</script>
+
+</body>
+</html>
