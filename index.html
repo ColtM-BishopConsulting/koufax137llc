@@ -20,7 +20,7 @@
     .card {
         background: #ffffff;
         width: 100%;
-        max-width: 600px;
+        max-width: 700px;
         padding: 32px;
         border-radius: 16px;
         box-shadow: 0 10px 25px rgba(15,23,42,0.12);
@@ -29,7 +29,7 @@
     }
 
     h2 {
-        font-size: 22px;
+        font-size: 24px;
         font-weight: 600;
         color: #111827;
         margin-top: 0;
@@ -49,7 +49,7 @@
         border-radius: 12px;
         padding: 18px;
         text-align: left;
-        white-space: pre-wrap;
+        white-space: pre-wrap;           /* keep line breaks */
         font-size: 15px;
         color: #1f2937;
         user-select: text;
@@ -106,45 +106,99 @@
 <body>
 
 <div class="card">
-    <h2>Listing Text</h2>
-    <p>Your content is below. It may copy automatically, and you can always tap the button.</p>
+    <h2>Listing Text Copied</h2>
+    <p>Your content has been copied to your clipboard.</p>
 
     <div id="textBox" class="text-box"></div>
 
-    <button id="copyBtn" class="button">Copy Text</button>
+    <button id="copyBtn" class="button">Copy Text Again</button>
 
     <div id="copiedMsg" class="message">✔ Copied to clipboard!</div>
 
-    <div class="footer">You can now paste this into your post.</div>
+    <div class="footer" id="footerNote">You may now close this page.</div>
 </div>
 
 <script>
-    // Get ?data= value and decode properly
-    const params = new URLSearchParams(window.location.search);
-    const raw = params.get("data") || "";
-    const text = decodeURIComponent(raw);
+    var params = new URLSearchParams(window.location.search);
+    var raw = params.get("data") || "";
 
-    const textBox = document.getElementById("textBox");
-    const copiedMsg = document.getElementById("copiedMsg");
-    const copyBtn = document.getElementById("copyBtn");
+    // URLSearchParams already decodes %0A, etc.
+    var text = raw;
 
-    // Write the decoded text with exact line breaks
+    // If literal "\n" sequences came through, convert them to real newlines
+    text = text.replace(/\\n/g, "\n");
+
+    var textBox   = document.getElementById("textBox");
+    var copiedMsg = document.getElementById("copiedMsg");
+    var copyBtn   = document.getElementById("copyBtn");
+    var footerNote = document.getElementById("footerNote");
+
     textBox.textContent = text;
 
-    function copyText() {
-        navigator.clipboard.writeText(text).then(() => {
-            copiedMsg.textContent = "✔ Copied!";
-            copiedMsg.classList.add("show");
-        }).catch(() => {
-            copiedMsg.textContent = "Could not auto-copy. You can still copy manually.";
-            copiedMsg.classList.add("show");
-        });
+    function showMessage(msg, isError) {
+        copiedMsg.textContent = msg;
+        copiedMsg.classList.add("show");
+        if (isError) {
+            copiedMsg.classList.add("error");
+        } else {
+            copiedMsg.classList.remove("error");
+        }
+    }
+
+    function startAutoCloseCountdown(seconds) {
+        var remaining = seconds;
+
+        // Update message immediately
+        showMessage("✔ Copied to clipboard! This tab will close in " + remaining + " seconds...", false);
+
+        var interval = setInterval(function() {
+            remaining--;
+            if (remaining > 0) {
+                copiedMsg.textContent = "✔ Copied to clipboard! This tab will close in " + remaining + " seconds...";
+            } else {
+                clearInterval(interval);
+                // Try to close the window; if blocked, update message
+                try {
+                    window.close();
+                } catch (e) {
+                    console.error("Window close blocked:", e);
+                }
+                // After a short delay, change footer text in case close was blocked
+                setTimeout(function() {
+                    footerNote.textContent = "If this tab did not close automatically, you can safely close it now.";
+                }, 300);
+            }
+        }, 1000);
+    }
+
+    async function copyText() {
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                // Fallback for older / restricted browsers
+                var range = document.createRange();
+                range.selectNodeContents(textBox);
+                var sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+                document.execCommand("copy");
+                sel.removeAllRanges();
+            }
+            // Start 3 second countdown to auto-close
+            startAutoCloseCountdown(3);
+        } catch (e) {
+            console.error(e);
+            showMessage("Could not copy automatically. You can still select the text above manually.", true);
+        }
     }
 
     copyBtn.addEventListener("click", copyText);
 
-    // Try auto-copy
-    setTimeout(copyText, 150);
+    // Try auto-copy on load and trigger countdown
+    window.addEventListener("load", function () {
+        setTimeout(copyText, 150);
+    });
 </script>
 
 </body>
