@@ -26,6 +26,8 @@
         box-shadow: 0 10px 25px rgba(15,23,42,0.12);
         border: 1px solid #e5e7eb;
         text-align: center;
+        position: relative;
+        z-index: 1;
     }
 
     h2 {
@@ -49,7 +51,7 @@
         border-radius: 12px;
         padding: 18px;
         text-align: left;
-        white-space: pre-wrap;           /* keep line breaks */
+        white-space: pre-wrap;
         font-size: 15px;
         color: #1f2937;
         user-select: text;
@@ -100,6 +102,45 @@
         font-size: 13px;
         color: #9ca3af;
     }
+
+    /* Full-screen overlay for countdown */
+    .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,0.55);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+    }
+
+    .overlay-content {
+        background: #ffffff;
+        padding: 24px 28px;
+        border-radius: 16px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.35);
+        max-width: 360px;
+        text-align: center;
+    }
+
+    .overlay-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 6px;
+    }
+
+    .overlay-text {
+        font-size: 14px;
+        color: #4b5563;
+        margin-bottom: 4px;
+    }
+
+    .overlay-count {
+        font-size: 14px;
+        font-weight: 600;
+        color: #059669;
+    }
 </style>
 
 </head>
@@ -115,58 +156,65 @@
 
     <div id="copiedMsg" class="message">✔ Copied to clipboard!</div>
 
-    <div class="footer" id="footerNote">You may now close this page.</div>
+    <div class="footer" id="footerNote">You can now paste this into your post.</div>
+</div>
+
+<!-- Overlay -->
+<div id="overlay" class="overlay">
+    <div class="overlay-content">
+        <div class="overlay-title">Copied to clipboard ✅</div>
+        <div class="overlay-text">You’re all set. This tab will close or redirect shortly.</div>
+        <div id="countdown" class="overlay-count">Closing in 3…</div>
+    </div>
 </div>
 
 <script>
+    // 👇 Set where to redirect after countdown (optional)
+    // Leave as empty string "" if you don't want a redirect.
+    const redirectUrl = "https://www.facebook.com/"; 
+
     var params = new URLSearchParams(window.location.search);
     var raw = params.get("data") || "";
 
-    // URLSearchParams already decodes %0A, etc.
-    var text = raw;
+    // URLSearchParams already decodes %0A etc.
+    var text = raw.replace(/\\n/g, "\n");
 
-    // If literal "\n" sequences came through, convert them to real newlines
-    text = text.replace(/\\n/g, "\n");
-
-    var textBox   = document.getElementById("textBox");
-    var copiedMsg = document.getElementById("copiedMsg");
-    var copyBtn   = document.getElementById("copyBtn");
+    var textBox    = document.getElementById("textBox");
+    var copiedMsg  = document.getElementById("copiedMsg");
+    var copyBtn    = document.getElementById("copyBtn");
     var footerNote = document.getElementById("footerNote");
+    var overlay    = document.getElementById("overlay");
+    var countdown  = document.getElementById("countdown");
 
     textBox.textContent = text;
 
     function showMessage(msg, isError) {
         copiedMsg.textContent = msg;
         copiedMsg.classList.add("show");
-        if (isError) {
-            copiedMsg.classList.add("error");
-        } else {
-            copiedMsg.classList.remove("error");
-        }
+        if (isError) copiedMsg.classList.add("error");
+        else copiedMsg.classList.remove("error");
     }
 
-    function startAutoCloseCountdown(seconds) {
+    function startOverlayCountdown(seconds) {
         var remaining = seconds;
-
-        // Update message immediately
-        showMessage("✔ Copied to clipboard! This tab will close in " + remaining + " seconds...", false);
+        overlay.style.display = "flex";
+        countdown.textContent = "Closing in " + remaining + "…";
 
         var interval = setInterval(function() {
             remaining--;
             if (remaining > 0) {
-                copiedMsg.textContent = "✔ Copied to clipboard! This tab will close in " + remaining + " seconds...";
+                countdown.textContent = "Closing in " + remaining + "…";
             } else {
                 clearInterval(interval);
-                // Try to close the window; if blocked, update message
-                try {
-                    window.close();
-                } catch (e) {
-                    console.error("Window close blocked:", e);
-                }
-                // After a short delay, change footer text in case close was blocked
-                setTimeout(function() {
+                // Try to close tab
+                try { window.close(); } catch (e) { console.error(e); }
+                // If that fails, redirect (if configured)
+                if (redirectUrl) {
+                    window.location.href = redirectUrl;
+                } else {
+                    overlay.style.display = "none";
                     footerNote.textContent = "If this tab did not close automatically, you can safely close it now.";
-                }, 300);
+                }
             }
         }, 1000);
     }
@@ -176,7 +224,6 @@
             if (navigator.clipboard && window.isSecureContext) {
                 await navigator.clipboard.writeText(text);
             } else {
-                // Fallback for older / restricted browsers
                 var range = document.createRange();
                 range.selectNodeContents(textBox);
                 var sel = window.getSelection();
@@ -185,8 +232,8 @@
                 document.execCommand("copy");
                 sel.removeAllRanges();
             }
-            // Start 3 second countdown to auto-close
-            startAutoCloseCountdown(3);
+            showMessage("✔ Copied to clipboard!", false);
+            startOverlayCountdown(3);
         } catch (e) {
             console.error(e);
             showMessage("Could not copy automatically. You can still select the text above manually.", true);
@@ -195,7 +242,7 @@
 
     copyBtn.addEventListener("click", copyText);
 
-    // Try auto-copy on load and trigger countdown
+    // Try auto-copy on load
     window.addEventListener("load", function () {
         setTimeout(copyText, 150);
     });
