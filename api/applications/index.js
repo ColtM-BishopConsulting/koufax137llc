@@ -2,7 +2,6 @@
 const { query } = require("../../db");
 
 module.exports = async (req, res) => {
-  // Enable CORS for simple front-end fetches (same origin is fine, but harmless)
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -13,7 +12,6 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === "POST") {
-      // Expect JSON body from Zapier or your form
       const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
 
       const {
@@ -22,13 +20,14 @@ module.exports = async (req, res) => {
         phone = null,
         propertyAddress = null,
         moveInDate = null,
+        coAppEmail = null,   // 👈 NEW
       } = body;
 
       const result = await query(
-        `INSERT INTO applications (name, email, phone, property_address, move_in_date, raw_payload)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO applications (name, email, phone, property_address, move_in_date, co_app_email, raw_payload)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING *`,
-        [name, email, phone, propertyAddress, moveInDate, JSON.stringify(body)]
+        [name, email, phone, propertyAddress, moveInDate, coAppEmail, JSON.stringify(body)]
       );
 
       return res.status(201).json(result.rows[0]);
