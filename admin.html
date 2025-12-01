@@ -5,154 +5,560 @@
   <title>Tenant Applications</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #f3f4f6;
-      padding: 24px;
+      color: #111827;
     }
-    .container {
-      max-width: 960px;
+
+    .page {
+      max-width: 1200px;
       margin: 0 auto;
+      padding: 24px 16px 40px;
+      display: flex;
+      gap: 24px;
     }
+
+    .main {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
     h1 {
       font-size: 26px;
       font-weight: 600;
-      margin-bottom: 16px;
-      color: #111827;
+      margin: 0 0 8px;
     }
+
+    .subheading {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 16px;
+    }
+
+    /* Top filter bar */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .filters label {
+      font-size: 13px;
+      color: #4b5563;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 200px;
+    }
+
+    select {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 13px;
+      background: #ffffff;
+    }
+
+    .btn-refresh {
+      background: #2563eb;
+      color: #ffffff;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-refresh:hover {
+      background: #1d4ed8;
+    }
+
+    /* Cards list */
+    .list {
+      margin-top: 8px;
+    }
+
     .card {
       background: #ffffff;
       border-radius: 12px;
       border: 1px solid #e5e7eb;
-      padding: 16px 18px;
-      margin-bottom: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+      cursor: pointer;
+      transition: box-shadow 0.12s ease, transform 0.08s ease, border-color 0.12s ease;
     }
-    .row-top {
+
+    .card:hover {
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+      border-color: #cbd5f5;
+      transform: translateY(-1px);
+    }
+
+    .card-top {
       display: flex;
       justify-content: space-between;
+      align-items: flex-start;
       gap: 8px;
-      flex-wrap: wrap;
+      margin-bottom: 4px;
     }
+
     .name {
       font-weight: 600;
       font-size: 15px;
       color: #111827;
     }
+
     .meta {
       font-size: 13px;
       color: #4b5563;
     }
-    .status-pill {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      text-transform: capitalize;
-    }
-    .status-pending {
-      background: #fef9c3;
-      color: #92400e;
-    }
-    .status-accepted {
-      background: #dcfce7;
-      color: #166534;
-    }
-    .status-rejected {
-      background: #fee2e2;
-      color: #b91c1c;
-    }
-    .actions {
-      margin-top: 10px;
-    }
-    button {
-      border: none;
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 13px;
-      cursor: pointer;
-      margin-right: 6px;
-    }
-    .btn-accept {
-      background: #22c55e;
-      color: #ffffff;
-    }
-    .btn-reject {
-      background: #ef4444;
-      color: #ffffff;
-    }
-    .btn-refresh {
-      background: #2563eb;
-      color: #ffffff;
-      margin-bottom: 16px;
-    }
+
     .small {
       font-size: 12px;
       color: #6b7280;
       margin-top: 4px;
     }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .status-pending {
+      background: #fef9c3;
+      color: #92400e;
+    }
+
+    .status-accepted {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-rejected {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .badge-co-pending {
+      background: #e5e7eb;
+      color: #4b5563;
+      margin-left: 6px;
+    }
+
+    .badge-co-paired {
+      background: #dcfce7;
+      color: #166534;
+      margin-left: 6px;
+    }
+
+    /* Detail panel (slide-out) */
+    .detail-panel {
+      width: 380px;
+      max-width: 100%;
+      background: #ffffff;
+      border-left: 1px solid #e5e7eb;
+      box-shadow: -4px 0 18px rgba(15, 23, 42, 0.12);
+      padding: 18px 18px 24px;
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
+    }
+
+    .detail-empty {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .detail-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .detail-sub {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 10px;
+    }
+
+    .detail-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+      font-weight: 600;
+      margin-top: 12px;
+      margin-bottom: 4px;
+    }
+
+    .detail-box {
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      padding: 10px 11px;
+      font-size: 13px;
+      color: #111827;
+    }
+
+    .detail-line {
+      margin-bottom: 4px;
+    }
+
+    .detail-label {
+      font-weight: 600;
+      color: #4b5563;
+    }
+
+    .code-block {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      white-space: pre-wrap;
+      max-height: 260px;
+      overflow: auto;
+      background: #0f172a;
+      color: #e5e7eb;
+      border-radius: 8px;
+      padding: 8px 10px;
+      border: 1px solid #1f2937;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .btn-status {
+      border-radius: 999px;
+      border: none;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .btn-status-accept {
+      background: #22c55e;
+      color: #ffffff;
+    }
+
+    .btn-status-reject {
+      background: #ef4444;
+      color: #ffffff;
+    }
+
+    .btn-status-pending {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    @media (max-width: 900px) {
+      .page {
+        flex-direction: column;
+      }
+      .detail-panel {
+        position: static;
+        width: 100%;
+        box-shadow: 0 -4px 16px rgba(15,23,42,0.15);
+        border-left: none;
+        border-top: 1px solid #e5e7eb;
+        margin-top: 12px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Tenant Applications</h1>
-    <button id="refreshBtn" class="btn-refresh">Refresh</button>
-    <div id="list"></div>
+  <div class="page">
+    <div class="main">
+      <h1>Tenant Applications</h1>
+      <div class="subheading">Review, filter, and manage incoming rental applications.</div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <label for="propertyFilter">Filter by property</label>
+          <select id="propertyFilter">
+            <option value="">All properties</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="statusFilter">Filter by status</label>
+          <select id="statusFilter">
+            <option value="">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="accepted">Accepted</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+
+        <button id="refreshBtn" class="btn-refresh">
+          ↻ Refresh
+        </button>
+      </div>
+
+      <div id="list" class="list"></div>
+    </div>
+
+    <aside class="detail-panel" id="detailPanel">
+      <div id="detailEmpty" class="detail-empty">
+        Select an application card to view full details.
+      </div>
+      <div id="detailContent" style="display:none;"></div>
+    </aside>
   </div>
 
   <script>
+    let allApps = [];
+    let selectedApp = null;
+
+    const listEl = document.getElementById("list");
+    const propertyFilterEl = document.getElementById("propertyFilter");
+    const statusFilterEl = document.getElementById("statusFilter");
+    const detailEmptyEl = document.getElementById("detailEmpty");
+    const detailContentEl = document.getElementById("detailContent");
+
     async function fetchApps() {
-      const list = document.getElementById("list");
-      list.innerHTML = "Loading…";
+      listEl.innerHTML = "Loading…";
 
       const res = await fetch("/api/applications");
       const data = await res.json();
 
-      if (!Array.isArray(data) || data.length === 0) {
-        list.innerHTML = "<p>No applications yet.</p>";
+      if (!Array.isArray(data)) {
+        listEl.innerHTML = "<p>Could not load applications.</p>";
         return;
       }
 
-      list.innerHTML = "";
+      allApps = decorateCoApplicants(data);
+      populatePropertyFilter(allApps);
+      renderList();
+      if (selectedApp) {
+        // refresh selected app from new data
+        const updated = allApps.find(a => a.id === selectedApp.id);
+        if (updated) {
+          selectedApp = updated;
+          renderDetail(selectedApp);
+        }
+      }
+    }
 
-      data.forEach(app => {
+    function decorateCoApplicants(apps) {
+      // build map to find partner by email + property
+      const mapByEmailProperty = new Map();
+      apps.forEach(app => {
+        const key = (app.email || "").toLowerCase() + "|" + (app.property_address || "");
+        mapByEmailProperty.set(key, app);
+      });
+
+      apps.forEach(app => {
+        app.coStatus = null;
+        if (app.co_app_email) {
+          const partnerKey = app.co_app_email.toLowerCase() + "|" + (app.property_address || "");
+          const partner = mapByEmailProperty.get(partnerKey);
+          if (partner) {
+            app.coStatus = "paired";
+            if (!partner.coStatus) {
+              partner.coStatus = "paired";
+            }
+          } else {
+            app.coStatus = "pending";
+          }
+        }
+      });
+
+      return apps;
+    }
+
+    function populatePropertyFilter(apps) {
+      const current = propertyFilterEl.value;
+      const set = new Set();
+      apps.forEach(app => {
+        if (app.property_address) set.add(app.property_address);
+      });
+
+      propertyFilterEl.innerHTML = '<option value="">All properties</option>';
+      Array.from(set).sort().forEach(addr => {
+        const opt = document.createElement("option");
+        opt.value = addr;
+        opt.textContent = addr;
+        propertyFilterEl.appendChild(opt);
+      });
+
+      // keep selection if still valid
+      if (current && set.has(current)) {
+        propertyFilterEl.value = current;
+      }
+    }
+
+    function renderList() {
+      const property = propertyFilterEl.value;
+      const status = statusFilterEl.value;
+
+      let apps = allApps.slice();
+
+      if (property) {
+        apps = apps.filter(a => (a.property_address || "") === property);
+      }
+      if (status) {
+        apps = apps.filter(a => (a.status || "pending") === status);
+      }
+
+      if (apps.length === 0) {
+        listEl.innerHTML = "<p>No applications found for this filter.</p>";
+        return;
+      }
+
+      listEl.innerHTML = "";
+
+      apps.forEach(app => {
         const card = document.createElement("div");
         card.className = "card";
 
         const created = app.created_at ? new Date(app.created_at).toLocaleString() : "";
+        const statusClass = "status-" + (app.status || "pending");
+
+        let coBadge = "";
+        if (app.coStatus === "pending") {
+          coBadge = '<span class="badge badge-co-pending">Co-app: Pending</span>';
+        } else if (app.coStatus === "paired") {
+          coBadge = '<span class="badge badge-co-paired">Co-app: Paired</span>';
+        }
 
         card.innerHTML = `
-          <div class="row-top">
+          <div class="card-top">
             <div>
-              <div class="name">${app.name || "Unnamed applicant"}</div>
-              <div class="meta">${app.email || ""} ${app.phone ? " • " + app.phone : ""}</div>
+              <div class="name">${escapeHtml(app.name || "Unnamed applicant")}</div>
+              <div class="meta">
+                ${escapeHtml(app.email || "")}
+                ${app.phone ? " • " + escapeHtml(app.phone) : ""}
+              </div>
               <div class="small">
-                Property: ${app.property_address || "—"}<br>
-                Move-in: ${app.move_in_date || "—"}<br>
-                Submitted: ${created}
+                Property: ${escapeHtml(app.property_address || "—")}<br>
+                Move-in: ${escapeHtml(app.move_in_date || "—")}
               </div>
             </div>
-            <div>
-              <span class="status-pill status-${app.status}">
-                ${app.status}
-              </span>
+            <div style="text-align:right;">
+              <div class="badge ${statusClass}">
+                ${escapeHtml(app.status || "pending")}
+              </div>
+              ${coBadge}
+              <div class="small" style="margin-top:6px;">
+                Submitted: ${escapeHtml(created)}
+              </div>
             </div>
-          </div>
-          <div class="actions">
-            <button class="btn-accept">Accept</button>
-            <button class="btn-reject">Reject</button>
           </div>
         `;
 
-        const acceptBtn = card.querySelector(".btn-accept");
-        const rejectBtn = card.querySelector(".btn-reject");
+        card.addEventListener("click", () => {
+          selectedApp = app;
+          renderDetail(app);
+        });
 
-        acceptBtn.addEventListener("click", () => updateStatus(app.id, "accepted"));
-        rejectBtn.addEventListener("click", () => updateStatus(app.id, "rejected"));
-
-        list.appendChild(card);
+        listEl.appendChild(card);
       });
+    }
+
+    function renderDetail(app) {
+      detailEmptyEl.style.display = "none";
+      detailContentEl.style.display = "block";
+
+      const created = app.created_at ? new Date(app.created_at).toLocaleString() : "";
+      const statusLabel = app.status || "pending";
+      const statusClass = "status-" + statusLabel;
+      const coStatus = app.coStatus;
+      let coStatusLabel = "";
+      let coStatusClass = "";
+      if (coStatus === "pending") {
+        coStatusLabel = "Co-app: Pending";
+        coStatusClass = "badge-co-pending";
+      } else if (coStatus === "paired") {
+        coStatusLabel = "Co-app: Paired";
+        coStatusClass = "badge-co-paired";
+      }
+
+      // pretty print raw payload
+      let rawPretty = "";
+      try {
+        let raw = app.raw_payload;
+        if (typeof raw === "string") {
+          raw = JSON.parse(raw);
+        }
+        rawPretty = JSON.stringify(raw, null, 2);
+      } catch (e) {
+        rawPretty = String(app.raw_payload || "");
+      }
+
+      detailContentEl.innerHTML = `
+        <div class="detail-header">
+          <div>
+            <div class="detail-title">${escapeHtml(app.name || "Unnamed applicant")}</div>
+            <div class="detail-sub">
+              Application for ${escapeHtml(app.property_address || "—")}<br>
+              Submitted ${escapeHtml(created)} • ID ${escapeHtml(String(app.id))}
+            </div>
+          </div>
+          <div>
+            <div class="badge ${statusClass}">${escapeHtml(statusLabel)}</div>
+            ${coStatusLabel ? `<div class="badge ${coStatusClass}" style="margin-top:4px;">${escapeHtml(coStatusLabel)}</div>` : ""}
+          </div>
+        </div>
+
+        <div class="pill-row" style="margin-bottom:10px;">
+          <button class="btn-status btn-status-pending" onclick="updateStatus(${app.id}, 'pending')">Mark Pending</button>
+          <button class="btn-status btn-status-accept" onclick="updateStatus(${app.id}, 'accepted')">Accept</button>
+          <button class="btn-status btn-status-reject" onclick="updateStatus(${app.id}, 'rejected')">Reject</button>
+        </div>
+
+        <div class="detail-section-title">Applicant</div>
+        <div class="detail-box">
+          <div class="detail-line"><span class="detail-label">Name:</span> ${escapeHtml(app.name || "—")}</div>
+          <div class="detail-line"><span class="detail-label">Email:</span> ${app.email ? `<a href="mailto:${escapeAttr(app.email)}">${escapeHtml(app.email)}</a>` : "—"}</div>
+          <div class="detail-line"><span class="detail-label">Phone:</span> ${escapeHtml(app.phone || "—")}</div>
+          <div class="detail-line"><span class="detail-label">Co-Applicant Email:</span> ${escapeHtml(app.co_app_email || "None")}</div>
+        </div>
+
+        <div class="detail-section-title">Property &amp; Move-in</div>
+        <div class="detail-box">
+          <div class="detail-line"><span class="detail-label">Property:</span> ${escapeHtml(app.property_address || "—")}</div>
+          <div class="detail-line"><span class="detail-label">Move-in date:</span> ${escapeHtml(app.move_in_date || "—")}</div>
+        </div>
+
+        <div class="detail-section-title">Raw Application Payload</div>
+        <div class="code-block">${escapeHtml(rawPretty)}</div>
+      `;
     }
 
     async function updateStatus(id, status) {
@@ -161,12 +567,26 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      fetchApps();
+      await fetchApps();
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function escapeAttr(str) {
+      return String(str || "").replace(/"/g, "&quot;");
     }
 
     document.getElementById("refreshBtn").addEventListener("click", fetchApps);
+    propertyFilterEl.addEventListener("change", renderList);
+    statusFilterEl.addEventListener("change", renderList);
 
-    // Initial load
     fetchApps();
   </script>
 </body>
