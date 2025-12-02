@@ -20,13 +20,6 @@
       max-width: 1200px;
       margin: 0 auto;
       padding: 24px 16px 40px;
-      display: flex;
-      gap: 24px;
-    }
-
-    .main {
-      flex: 1 1 0;
-      min-width: 0;
     }
 
     h1 {
@@ -175,36 +168,53 @@
       margin-left: 6px;
     }
 
-    /* Detail panel (slide-out) */
-    .detail-panel {
-      width: 380px;
-      max-width: 100%;
-      background: #ffffff;
-      border-left: 1px solid #e5e7eb;
-      box-shadow: -4px 0 18px rgba(15, 23, 42, 0.12);
-      padding: 18px 18px 24px;
-      position: sticky;
-      top: 0;
-      align-self: flex-start;
+    /* Modal with blurred backdrop */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(6px);
+      z-index: 50;
+      padding: 16px;
     }
 
-    .detail-empty {
-      font-size: 13px;
-      color: #9ca3af;
-      margin-top: 40px;
-      text-align: center;
+    .modal {
+      background: #ffffff;
+      border-radius: 16px;
+      max-width: 760px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.45);
+      border: 1px solid #e5e7eb;
+      position: relative;
+      padding: 18px 20px 20px;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      border: none;
+      background: transparent;
+      font-size: 20px;
+      cursor: pointer;
+      color: #6b7280;
     }
 
     .detail-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 8px;
       gap: 8px;
+      margin-bottom: 8px;
     }
 
     .detail-title {
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 600;
     }
 
@@ -220,7 +230,7 @@
       letter-spacing: 0.08em;
       color: #6b7280;
       font-weight: 600;
-      margin-top: 12px;
+      margin-top: 14px;
       margin-bottom: 4px;
     }
 
@@ -242,24 +252,12 @@
       color: #4b5563;
     }
 
-    .code-block {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 11px;
-      white-space: pre-wrap;
-      max-height: 260px;
-      overflow: auto;
-      background: #0f172a;
-      color: #e5e7eb;
-      border-radius: 8px;
-      padding: 8px 10px;
-      border: 1px solid #1f2937;
-    }
-
     .pill-row {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-top: 4px;
+      margin-top: 6px;
+      margin-bottom: 10px;
     }
 
     .btn-status {
@@ -286,59 +284,70 @@
       color: #374151;
     }
 
-    @media (max-width: 900px) {
-      .page {
-        flex-direction: column;
-      }
-      .detail-panel {
-        position: static;
-        width: 100%;
-        box-shadow: 0 -4px 16px rgba(15,23,42,0.15);
-        border-left: none;
-        border-top: 1px solid #e5e7eb;
-        margin-top: 12px;
+    .answers-box {
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      padding: 10px 11px;
+      font-size: 13px;
+      color: #111827;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    .answer-line {
+      margin-bottom: 4px;
+    }
+
+    .answer-label {
+      font-weight: 600;
+      color: #4b5563;
+    }
+
+    @media (max-width: 640px) {
+      .modal {
+        padding: 16px;
       }
     }
   </style>
 </head>
 <body>
   <div class="page">
-    <div class="main">
-      <h1>Tenant Applications</h1>
-      <div class="subheading">Review, filter, and manage incoming rental applications.</div>
+    <h1>Tenant Applications</h1>
+    <div class="subheading">Review, filter, and manage incoming rental applications.</div>
 
-      <div class="filters">
-        <div class="filter-group">
-          <label for="propertyFilter">Filter by property</label>
-          <select id="propertyFilter">
-            <option value="">All properties</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label for="statusFilter">Filter by status</label>
-          <select id="statusFilter">
-            <option value="">All statuses</option>
-            <option value="pending">Pending</option>
-            <option value="accepted">Accepted</option>
-            <option value="rejected">Rejected</option>
-          </select>
-        </div>
-
-        <button id="refreshBtn" class="btn-refresh">
-          ↻ Refresh
-        </button>
+    <div class="filters">
+      <div class="filter-group">
+        <label for="propertyFilter">Filter by property</label>
+        <select id="propertyFilter">
+          <option value="">All properties</option>
+        </select>
       </div>
 
-      <div id="list" class="list"></div>
+      <div class="filter-group">
+        <label for="statusFilter">Filter by status</label>
+        <select id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="accepted">Accepted</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+
+      <button id="refreshBtn" class="btn-refresh">
+        ↻ Refresh
+      </button>
     </div>
 
-    <aside class="detail-panel" id="detailPanel">
-      <div id="detailEmpty" class="detail-empty">
-        Select an application card to view full details.
-      </div>
-      <div id="detailContent" style="display:none;"></div>
-    </aside>
+    <div id="list" class="list"></div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <button id="modalClose" class="modal-close" aria-label="Close">×</button>
+      <div id="modalInner"></div>
+    </div>
   </div>
 
   <script>
@@ -348,8 +357,17 @@
     const listEl = document.getElementById("list");
     const propertyFilterEl = document.getElementById("propertyFilter");
     const statusFilterEl = document.getElementById("statusFilter");
-    const detailEmptyEl = document.getElementById("detailEmpty");
-    const detailContentEl = document.getElementById("detailContent");
+    const modalBackdropEl = document.getElementById("modalBackdrop");
+    const modalInnerEl = document.getElementById("modalInner");
+    const modalCloseEl = document.getElementById("modalClose");
+
+    // Optional mapping for ugly field keys -> nicer labels.
+    // Fill this in over time if you want exact phrasing.
+    const FIELD_LABELS = {
+      // "334817375__values__cmi7iwzdf0042356r0ts3gwiu": "Smoking",
+      // "334817375__values__cmi7iwzdk004w356rbxscqa2y": "Gross Monthly Income",
+      // etc...
+    };
 
     async function fetchApps() {
       listEl.innerHTML = "Loading…";
@@ -365,22 +383,23 @@
       allApps = decorateCoApplicants(data);
       populatePropertyFilter(allApps);
       renderList();
+
       if (selectedApp) {
-        // refresh selected app from new data
         const updated = allApps.find(a => a.id === selectedApp.id);
-        if (updated) {
+        if (updated && modalBackdropEl.style.display === "flex") {
           selectedApp = updated;
-          renderDetail(selectedApp);
+          renderModal(selectedApp);
         }
       }
     }
 
     function decorateCoApplicants(apps) {
-      // build map to find partner by email + property
       const mapByEmailProperty = new Map();
       apps.forEach(app => {
         const key = (app.email || "").toLowerCase() + "|" + (app.property_address || "");
-        mapByEmailProperty.set(key, app);
+        if (app.email) {
+          mapByEmailProperty.set(key, app);
+        }
       });
 
       apps.forEach(app => {
@@ -417,7 +436,6 @@
         propertyFilterEl.appendChild(opt);
       });
 
-      // keep selection if still valid
       if (current && set.has(current)) {
         propertyFilterEl.value = current;
       }
@@ -484,17 +502,23 @@
 
         card.addEventListener("click", () => {
           selectedApp = app;
-          renderDetail(app);
+          openModal(app);
         });
 
         listEl.appendChild(card);
       });
     }
 
-    function renderDetail(app) {
-      detailEmptyEl.style.display = "none";
-      detailContentEl.style.display = "block";
+    function openModal(app) {
+      renderModal(app);
+      modalBackdropEl.style.display = "flex";
+    }
 
+    function closeModal() {
+      modalBackdropEl.style.display = "none";
+    }
+
+    function renderModal(app) {
       const created = app.created_at ? new Date(app.created_at).toLocaleString() : "";
       const statusLabel = app.status || "pending";
       const statusClass = "status-" + statusLabel;
@@ -509,19 +533,14 @@
         coStatusClass = "badge-co-paired";
       }
 
-      // pretty print raw payload
-      let rawPretty = "";
-      try {
-        let raw = app.raw_payload;
-        if (typeof raw === "string") {
-          raw = JSON.parse(raw);
-        }
-        rawPretty = JSON.stringify(raw, null, 2);
-      } catch (e) {
-        rawPretty = String(app.raw_payload || "");
+      let raw = app.raw_payload;
+      if (typeof raw === "string") {
+        try { raw = JSON.parse(raw); } catch (e) {}
       }
 
-      detailContentEl.innerHTML = `
+      const answersHtml = renderAnswers(raw);
+
+      modalInnerEl.innerHTML = `
         <div class="detail-header">
           <div>
             <div class="detail-title">${escapeHtml(app.name || "Unnamed applicant")}</div>
@@ -532,11 +551,15 @@
           </div>
           <div>
             <div class="badge ${statusClass}">${escapeHtml(statusLabel)}</div>
-            ${coStatusLabel ? `<div class="badge ${coStatusClass}" style="margin-top:4px;">${escapeHtml(coStatusLabel)}</div>` : ""}
+            ${
+              coStatusLabel
+                ? `<div class="badge ${coStatusClass}" style="margin-top:4px;">${escapeHtml(coStatusLabel)}</div>`
+                : ""
+            }
           </div>
         </div>
 
-        <div class="pill-row" style="margin-bottom:10px;">
+        <div class="pill-row">
           <button class="btn-status btn-status-pending" onclick="updateStatus(${app.id}, 'pending')">Mark Pending</button>
           <button class="btn-status btn-status-accept" onclick="updateStatus(${app.id}, 'accepted')">Accept</button>
           <button class="btn-status btn-status-reject" onclick="updateStatus(${app.id}, 'rejected')">Reject</button>
@@ -545,7 +568,11 @@
         <div class="detail-section-title">Applicant</div>
         <div class="detail-box">
           <div class="detail-line"><span class="detail-label">Name:</span> ${escapeHtml(app.name || "—")}</div>
-          <div class="detail-line"><span class="detail-label">Email:</span> ${app.email ? `<a href="mailto:${escapeAttr(app.email)}">${escapeHtml(app.email)}</a>` : "—"}</div>
+          <div class="detail-line"><span class="detail-label">Email:</span> ${
+            app.email
+              ? `<a href="mailto:${escapeAttr(app.email)}">${escapeHtml(app.email)}</a>`
+              : "—"
+          }</div>
           <div class="detail-line"><span class="detail-label">Phone:</span> ${escapeHtml(app.phone || "—")}</div>
           <div class="detail-line"><span class="detail-label">Co-Applicant Email:</span> ${escapeHtml(app.co_app_email || "None")}</div>
         </div>
@@ -556,9 +583,58 @@
           <div class="detail-line"><span class="detail-label">Move-in date:</span> ${escapeHtml(app.move_in_date || "—")}</div>
         </div>
 
-        <div class="detail-section-title">Raw Application Payload</div>
-        <div class="code-block">${escapeHtml(rawPretty)}</div>
+        <div class="detail-section-title">All Application Answers</div>
+        <div class="answers-box">
+          ${answersHtml || "<span style='font-size:12px; color:#9ca3af;'>No additional answers recorded.</span>"}
+        </div>
       `;
+    }
+
+    function renderAnswers(raw) {
+      if (!raw) return "";
+
+      let html = "";
+      function walk(prefix, value) {
+        if (value === null || value === undefined || value === "") return;
+
+        if (typeof value === "object" && !Array.isArray(value)) {
+          for (const [k, v] of Object.entries(value)) {
+            const newPrefix = prefix ? prefix + " › " + k : k;
+            walk(newPrefix, v);
+          }
+        } else if (Array.isArray(value)) {
+          if (value.length === 0) return;
+          const label = prettifyKey(prefix);
+          html += `<div class="answer-line"><span class="answer-label">${escapeHtml(label)}:</span> ${escapeHtml(value.join(", "))}</div>`;
+        } else {
+          const label = prettifyKey(prefix);
+          html += `<div class="answer-line"><span class="answer-label">${escapeHtml(label)}:</span> ${escapeHtml(String(value))}</div>`;
+        }
+      }
+
+      walk("", raw);
+      return html;
+    }
+
+    function prettifyKey(key) {
+      if (!key) return "";
+      if (FIELD_LABELS[key]) return FIELD_LABELS[key];
+
+      // if key path like "section › 3348..." just use last part
+      const parts = String(key).split("›").map(s => s.trim());
+      let last = parts[parts.length - 1];
+
+      // zapier keys like "334817375__values__cmi7..." -> use middle if possible
+      const dbl = last.split("__values__");
+      if (dbl.length === 2) {
+        last = dbl[1];
+      }
+
+      return last
+        .replace(/[_\-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/\b\w/g, c => c.toUpperCase());
     }
 
     async function updateStatus(id, status) {
@@ -586,6 +662,11 @@
     document.getElementById("refreshBtn").addEventListener("click", fetchApps);
     propertyFilterEl.addEventListener("change", renderList);
     statusFilterEl.addEventListener("change", renderList);
+
+    modalCloseEl.addEventListener("click", closeModal);
+    modalBackdropEl.addEventListener("click", (e) => {
+      if (e.target === modalBackdropEl) closeModal();
+    });
 
     fetchApps();
   </script>
